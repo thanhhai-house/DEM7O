@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Kho phụ tùng</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    body{margin:0;background:#f6f7fb}
+    header{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:14px 16px;background:#111827;color:#fff;position:sticky;top:0}
+    header .left{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .muted{color:#cbd5e1}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .tab{border:1px solid #374151;background:#111827;color:#fff;padding:8px 10px;border-radius:10px;cursor:pointer;opacity:.85}
+    .tab.active{background:#fff;color:#111827;border-color:#fff;opacity:1}
+    main{padding:14px 16px;max-width:1200px;margin:0 auto}
+    .toast{position:fixed;right:16px;bottom:16px;background:#111827;color:#fff;padding:10px 12px;border-radius:12px;display:none;max-width:520px;z-index:100}
+    .topbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    input,button{padding:8px 10px;border-radius:10px;border:1px solid #374151}
+    button{cursor:pointer}
+    button.primary{background:#fff;color:#111827;border-color:#fff}
+    .linkbtn{background:transparent;color:#fff;border-color:#374151}
+  </style>
+</head>
+<body>
+<header>
+  <div class="left">
+    <strong>Kho phụ tùng</strong>
+    <span class="muted" id="status">Chưa cấu hình GAS</span>
+    <div class="topbar">
+      <input id="gasUrl" placeholder="https://script.google.com/macros/s/AKfycbws48973An00n8h6LBFyy11B7kYWkcSbJgyhzVjx-yXiazB3MpcgqK2fSw0yZVtUZzT/exec" style="width:min(560px,72vw)"/>
+      <button class="primary" id="saveGas">Lưu</button>
+      <button class="linkbtn" id="clearGas">Xoá</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="products">All sản phẩm</button>
+    <button class="tab" data-tab="import">Nhập</button>
+    <button class="tab" data-tab="export">Xuất</button>
+    <button class="tab" data-tab="admin">Admin</button>
+  </div>
+</header>
+
+<main>
+  <div id="view-products"></div>
+  <div id="view-import" style="display:none"></div>
+  <div id="view-export" style="display:none"></div>
+  <div id="view-admin" style="display:none"></div>
+</main>
+
+<div class="toast" id="toast"></div>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
