@@ -7,22 +7,17 @@
 
   <style>
     :root{
-      --bg: #fbf7ee;          /* trắng ngà */
-      --card:#ffffff;
-      --line:#e7efe8;
-      --primary:#7fbf9b;      /* xanh pastel */
-      --primary-2:#bfe3cf;    /* xanh nhạt */
-      --text:#1f2a24;
-      --muted:#607166;
+      --bg:#fbf7ee; --card:#fff; --line:#e7efe8;
+      --primary:#7fbf9b; --primary-2:#bfe3cf;
+      --text:#1f2a24; --muted:#607166;
       --danger:#d35b5b;
-      --warn:#d1a24a;
     }
     *{box-sizing:border-box}
+    html, body { height: 100%; }
     body{
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
+      margin:0; background:var(--bg); color:var(--text);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      display:flex; flex-direction:column;
     }
     header{
       position:sticky; top:0; z-index:10;
@@ -30,46 +25,19 @@
       border-bottom:1px solid var(--line);
       padding:12px 16px;
     }
+    main.wrap{flex:1;}
     .wrap{max-width:1200px; margin:0 auto; padding:14px 16px;}
-    .brand{
-      display:flex; gap:10px; align-items:center; justify-content:space-between;
-      flex-wrap:wrap;
-    }
+    .brand{display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
     .brand h1{margin:0; font-size:18px;}
-    .pill{
-      font-size:12px; padding:6px 10px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:#fff;
-      color:var(--muted);
-    }
-
-    .tabs{
-      display:flex; gap:8px; flex-wrap:wrap;
-      margin-top:10px;
-    }
+    .pill{font-size:12px; padding:6px 10px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--muted);}
+    .tabs{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
     .tab{
-      border:1px solid var(--line);
-      background:#fff;
-      border-radius:14px;
-      padding:10px 12px;
-      cursor:pointer;
-      user-select:none;
-      font-weight:600;
-      color:var(--muted);
+      border:1px solid var(--line); background:#fff; border-radius:14px;
+      padding:10px 12px; cursor:pointer; user-select:none;
+      font-weight:700; color:var(--muted);
     }
-    .tab.active{
-      background:var(--primary);
-      color:#fff;
-      border-color:transparent;
-    }
+    .tab.active{background:var(--primary); color:#fff; border-color:transparent;}
 
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:12px;
-      margin-top:14px;
-    }
     .card{
       background:var(--card);
       border:1px solid var(--line);
@@ -77,19 +45,13 @@
       box-shadow: 0 8px 20px rgba(0,0,0,.04);
       padding:12px;
     }
-
     .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
     .row.between{justify-content:space-between}
     .muted{color:var(--muted)}
     .title{margin:0 0 6px 0; font-size:16px;}
     .btn{
-      background:var(--primary);
-      color:#fff;
-      border:0;
-      border-radius:12px;
-      padding:10px 14px;
-      cursor:pointer;
-      font-weight:700;
+      background:var(--primary); color:#fff; border:0; border-radius:12px;
+      padding:10px 14px; cursor:pointer; font-weight:800;
     }
     .btn.secondary{background:#fff; color:var(--text); border:1px solid var(--line);}
     .btn.danger{background:var(--danger);}
@@ -109,33 +71,52 @@
     }
     textarea{min-height:90px; width:100%}
 
-    table{
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-      overflow:hidden;
-      border:1px solid var(--line);
-      border-radius:14px;
-      background:#fff;
-    }
-    th, td{
-      padding:10px;
-      border-bottom:1px solid var(--line);
-      text-align:left;
-      vertical-align:middle;
-      font-size:14px;
-    }
-    th{background:#f7fbf8; color:var(--muted); font-weight:800;}
-    tr:last-child td{border-bottom:0}
+    .grid{display:grid; grid-template-columns:1fr; gap:12px; margin-top:14px;}
 
-    .thumb{
-      width:48px; height:48px;
-      border-radius:12px;
+    /* ===== PRODUCTS CARD GRID ===== */
+    .products-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap:12px;
+      margin-top:12px;
+    }
+    .pcard{
+      display:flex; gap:12px; align-items:center;
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:var(--card);
+      box-shadow: 0 8px 20px rgba(0,0,0,.04);
+    }
+    .pimg{
+      width:78px; height:56px;
+      border-radius:999px;        /* OVAL */
       object-fit:cover;
       border:1px solid var(--line);
       background:#f5f5f5;
+      flex:0 0 auto;
+    }
+    .pinfo{flex:1; min-width:0;}
+    .pname{
+      font-weight:900; font-size:14px; margin:0;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .psub{
+      margin-top:4px; font-size:12px; color:var(--muted);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .pmeta{
+      margin-top:6px; display:flex; gap:8px; flex-wrap:wrap;
+      font-size:12px; color:var(--muted);
+    }
+    .pmeta b{color:var(--text)}
+    .pactions{display:flex; flex-direction:column; gap:8px; align-items:flex-end;}
+    .chkdel{
+      display:flex; gap:6px; align-items:center;
+      font-size:12px; color:var(--muted); user-select:none;
     }
 
+    /* ===== MODAL ===== */
     .modal-backdrop{
       position:fixed; inset:0; background:rgba(0,0,0,.25);
       display:none; align-items:center; justify-content:center;
@@ -143,7 +124,7 @@
     }
     .modal-backdrop.show{display:flex}
     .modal{
-      width:min(780px, 100%);
+      width:min(900px, 100%);
       background:#fff;
       border-radius:18px;
       border:1px solid var(--line);
@@ -154,18 +135,22 @@
     .cols{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
     @media (max-width: 860px){ .cols{grid-template-columns:1fr;} }
 
-    .toast{
-      position:fixed; right:14px; bottom:14px;
-      background:#fff;
+    .bigimg{
+      width:100%;
+      height:320px;
+      border-radius:18px;
+      object-fit:cover;
       border:1px solid var(--line);
-      border-radius:14px;
-      padding:10px 12px;
-      box-shadow:0 10px 30px rgba(0,0,0,.12);
-      max-width:min(420px, calc(100% - 28px));
-      display:none;
-      z-index:2000;
+      background:#f5f5f5;
     }
-    .toast.show{display:block}
+    .kv{
+      display:grid; grid-template-columns:140px 1fr;
+      gap:8px 10px;
+      font-size:14px;
+      margin-top:10px;
+    }
+    .kv div:nth-child(odd){color:var(--muted); font-weight:800;}
+    .kv div:nth-child(even){word-break:break-word;}
     .tag{
       display:inline-block;
       padding:4px 8px;
@@ -175,8 +160,26 @@
       font-size:12px;
       background:#fff;
     }
-    .diff.plus{color:#0f7a3a; font-weight:800;}
-    .diff.minus{color:#b53a3a; font-weight:800;}
+
+    /* ===== TOAST ===== */
+    .toast{
+      position:fixed; right:14px; bottom:14px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 12px;
+      box-shadow:0 10px 30px rgba(0,0,0,.12);
+      max-width:min(420px, calc(100% - 28px));
+      display:none; z-index:2000;
+    }
+    .toast.show{display:block}
+
+    /* ===== FOOTER ===== */
+    #brandFooter{
+      border-top:1px solid var(--line);
+      background:linear-gradient(90deg, #fff, var(--primary-2));
+      padding:12px 0;
+    }
   </style>
 </head>
 
@@ -205,7 +208,7 @@
       <div class="row between">
         <div>
           <h2 class="title">Danh sách sản phẩm</h2>
-          <div class="muted">Tìm kiếm theo tên / mã / brand</div>
+          <div class="muted">Tìm theo tên / brand / prefix / OEM / SKU</div>
         </div>
         <div class="row">
           <input id="qProducts" placeholder="Tìm nhanh..." />
@@ -213,22 +216,12 @@
           <button class="btn" id="btnOpenProductModal">+ Thêm sản phẩm</button>
         </div>
       </div>
-      <div style="margin-top:10px; overflow:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>Ảnh</th>
-              <th>Mã</th>
-              <th>Tên</th>
-              <th>Brand</th>
-              <th>Đơn vị</th>
-              <th>Tồn</th>
-              <th>Giá</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
-          <tbody id="productsTbody"></tbody>
-        </table>
+
+      <div id="productsGrid" class="products-grid"></div>
+
+      <div class="row between" style="margin-top:12px;">
+        <div class="muted">Tick “Xóa” rồi bấm nút bên phải để xóa hàng loạt.</div>
+        <button class="btn danger" id="btnDeleteSelected">Xóa sản phẩm đã chọn</button>
       </div>
     </section>
 
@@ -242,24 +235,17 @@
         <button class="btn secondary" id="btnReloadImport">Tải lại sản phẩm</button>
       </div>
 
-      <div class="cols" style="margin-top:10px;">
-        <div>
-          <div class="row" style="margin-bottom:10px;">
-            <select id="importProductSelect" style="flex:1"></select>
-            <input id="importQty" type="number" min="0" step="1" placeholder="Số lượng" style="width:160px" />
-          </div>
-          <textarea id="importNote" placeholder="Ghi chú..."></textarea>
-          <div class="row" style="margin-top:10px;">
-            <button class="btn" id="btnDoImport">Lưu nhập</button>
-            <span class="tag">Ghi log vào sheet TRANSACTIONS</span>
-          </div>
-        </div>
-        <div>
-          <div class="muted" style="margin-bottom:8px;">Gợi ý: nhập theo lô, ghi chú vị trí kệ / số phiếu</div>
-          <div id="importPreview" class="card" style="padding:12px; border-radius:14px; border:1px dashed var(--line); box-shadow:none;">
-            Chưa chọn sản phẩm.
-          </div>
-        </div>
+      <div class="row" style="margin-top:10px;">
+        <select id="importProductSelect" style="flex:1"></select>
+        <input id="importQty" type="number" min="0" step="1" placeholder="Số lượng" style="width:160px" />
+      </div>
+      <textarea id="importNote" placeholder="Ghi chú..."></textarea>
+      <div class="row" style="margin-top:10px;">
+        <button class="btn" id="btnDoImport">Lưu nhập</button>
+        <span class="tag">Ghi log TRANSACTIONS</span>
+      </div>
+      <div id="importPreview" class="card" style="margin-top:10px; padding:12px; border-radius:14px; border:1px dashed var(--line); box-shadow:none;">
+        Chưa chọn sản phẩm.
       </div>
     </section>
 
@@ -273,28 +259,21 @@
         <button class="btn secondary" id="btnReloadExport">Tải lại sản phẩm</button>
       </div>
 
-      <div class="cols" style="margin-top:10px;">
-        <div>
-          <div class="row" style="margin-bottom:10px;">
-            <select id="exportProductSelect" style="flex:1"></select>
-            <input id="exportQty" type="number" min="0" step="1" placeholder="Số lượng" style="width:160px" />
-          </div>
-          <textarea id="exportNote" placeholder="Ghi chú... (xe, khách, đơn hàng...)"></textarea>
-          <div class="row" style="margin-top:10px;">
-            <button class="btn" id="btnDoExport">Lưu xuất</button>
-            <span class="tag">Tự trừ tồn PRODUCTS</span>
-          </div>
-        </div>
-        <div>
-          <div class="muted" style="margin-bottom:8px;">Nếu xuất vượt tồn, hệ thống sẽ chặn</div>
-          <div id="exportPreview" class="card" style="padding:12px; border-radius:14px; border:1px dashed var(--line); box-shadow:none;">
-            Chưa chọn sản phẩm.
-          </div>
-        </div>
+      <div class="row" style="margin-top:10px;">
+        <select id="exportProductSelect" style="flex:1"></select>
+        <input id="exportQty" type="number" min="0" step="1" placeholder="Số lượng" style="width:160px" />
+      </div>
+      <textarea id="exportNote" placeholder="Ghi chú..."></textarea>
+      <div class="row" style="margin-top:10px;">
+        <button class="btn" id="btnDoExport">Lưu xuất</button>
+        <span class="tag">Tự trừ tồn PRODUCTS</span>
+      </div>
+      <div id="exportPreview" class="card" style="margin-top:10px; padding:12px; border-radius:14px; border:1px dashed var(--line); box-shadow:none;">
+        Chưa chọn sản phẩm.
       </div>
     </section>
 
-    <!-- INVENTORY CHECK -->
+    <!-- INVENTORY -->
     <section id="view-inventory" class="card" style="display:none;">
       <div class="row between">
         <div>
@@ -313,16 +292,15 @@
       </div>
 
       <div style="margin-top:10px; overflow:auto;">
-        <table>
+        <table style="width:100%; border-collapse:separate; border-spacing:0; border:1px solid var(--line); border-radius:14px; background:#fff;">
           <thead>
           <tr>
-            <th>Ảnh</th>
-            <th>Mã</th>
-            <th>Tên</th>
-            <th>Tồn hệ thống</th>
-            <th>Số thực tế</th>
-            <th>Chênh lệch</th>
-            <th>Ghi chú</th>
+            <th style="padding:10px; border-bottom:1px solid var(--line); background:#f7fbf8;">Ảnh</th>
+            <th style="padding:10px; border-bottom:1px solid var(--line); background:#f7fbf8;">Mã</th>
+            <th style="padding:10px; border-bottom:1px solid var(--line); background:#f7fbf8;">Tên</th>
+            <th style="padding:10px; border-bottom:1px solid var(--line); background:#f7fbf8;">Tồn</th>
+            <th style="padding:10px; border-bottom:1px solid var(--line); background:#f7fbf8;">Thực tế</th>
+            <th style="padding:10px; border-bottom:1px solid var(--line); background:#f7fbf8;">Ghi chú</th>
           </tr>
           </thead>
           <tbody id="invTbody"></tbody>
@@ -355,9 +333,7 @@
           <h2 class="title">Admin</h2>
           <div class="muted">Quản lý prefix / brand / unit / giá</div>
         </div>
-        <div class="row">
-          <button class="btn secondary" id="btnReloadAdmin">Tải lại</button>
-        </div>
+        <button class="btn secondary" id="btnReloadAdmin">Tải lại</button>
       </div>
 
       <div class="cols" style="margin-top:10px;">
@@ -405,18 +381,30 @@
     <div class="cols">
       <div>
         <div class="row">
-          <input id="p_id" placeholder="Mã sản phẩm (VD: P001)" style="flex:1" />
           <input id="p_name" placeholder="Tên sản phẩm" style="flex:2" />
-        </div>
-        <div class="row" style="margin-top:10px;">
           <select id="p_prefix" style="flex:1"></select>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
           <select id="p_brand" style="flex:1"></select>
           <select id="p_unit" style="flex:1"></select>
-        </div>
-        <div class="row" style="margin-top:10px;">
-          <input id="p_qty" type="number" min="0" step="1" placeholder="Tồn ban đầu" style="width:160px" />
+          <input id="p_qty" type="number" min="0" step="1" placeholder="Tồn" style="width:160px" />
           <input id="p_price" type="number" min="0" step="100" placeholder="Giá" style="width:200px" />
         </div>
+
+        <!-- SKU row -->
+        <div id="rowSKU" class="row" style="margin-top:10px;">
+          <input id="p_sku" placeholder="SKU (bắt buộc nếu không phải LỌC)" style="flex:1" />
+        </div>
+
+        <!-- OEM rows -->
+        <div id="rowOEM" class="row" style="margin-top:10px; display:none;">
+          <input id="p_oem" placeholder="OEM (bắt buộc nếu LỌC)" style="flex:1" />
+        </div>
+        <div id="rowOEMR" class="row" style="margin-top:10px; display:none;">
+          <input id="p_oem_replace" placeholder="OEM / Mã thay thế (ngăn cách bằng ,)" style="flex:1" />
+        </div>
+
         <textarea id="p_note" placeholder="Ghi chú..."></textarea>
 
         <div class="row" style="margin-top:10px;">
@@ -431,15 +419,50 @@
       </div>
 
       <div>
-        <div class="muted" style="margin-bottom:8px;">Preview ảnh</div>
-        <img id="p_image_preview" class="thumb" style="width:220px; height:220px; border-radius:18px;" alt="preview" />
-        <div class="muted" style="margin-top:10px;">Link hiển thị dùng dạng <b>uc?export=view</b> để không lỗi.</div>
+        <img id="p_image_preview" class="bigimg" alt="preview"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/900x600?text=No+Image';" />
+
+        <!-- DETAILS VIEW -->
+        <div id="detailsBox" style="margin-top:10px; display:none;">
+          <div class="row between">
+            <span class="tag">Chi tiết</span>
+            <span id="detailKeyTag" class="tag">—</span>
+          </div>
+
+          <div class="kv">
+            <div>Tên</div><div id="d_name">—</div>
+            <div>Prefix</div><div id="d_prefix">—</div>
+            <div>Brand</div><div id="d_brand">—</div>
+            <div>Đơn vị</div><div id="d_unit">—</div>
+            <div>Tồn</div><div id="d_qty">—</div>
+            <div>Giá</div><div id="d_price">—</div>
+            <div>SKU</div><div id="d_sku">—</div>
+            <div>OEM</div><div id="d_oem">—</div>
+            <div>Mã thay thế</div><div id="d_replace">—</div>
+            <div>Ghi chú</div><div id="d_note">—</div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 </div>
 
 <div id="toast" class="toast"></div>
+
+<footer id="brandFooter">
+  <div class="wrap" style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <img id="brandLogo" src="./logo.png" alt="logo"
+           style="height:34px; width:auto; border-radius:10px; border:1px solid var(--line); background:#fff;">
+      <div class="muted">
+        <b>THƯƠNG HIỆU CỦA BẠN</b><br/>
+        © <span id="yearNow"></span> VÕ CHÂU NGUYÊN — All rights reserved
+      </div>
+    </div>
+    <span class="tag">Pastel xanh • trắng ngà</span>
+  </div>
+</footer>
 
 <script src="./app.js"></script>
 <script src="./product.js"></script>
