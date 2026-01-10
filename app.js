@@ -1,7 +1,7 @@
 /* =========================
    CONFIG — BẮT BUỘC SỬA
 ========================= */
-const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzwqgI9fZWOHBanFy5AwWgwY6QOdFHtBh37poJ-YqFiAURtLl9qXqiYVsQmgbZOAHcrfA/exec"; // <-- Dán URL Web App của Apps Script
+const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwsv9dWFwPx3XGNL0IfUTm6f5tnB6o2u4jslQqWLLXs06TnG_i4hG8cLf6SxgiIOTsDgQ/exec";
 
 /* =========================
    STATE
@@ -9,24 +9,24 @@ const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzwqgI9fZWOHBanF
 const state = {
   products: [],
   meta: { prefixes: [], brands: [], units: [] },
-  editingProductId: null,
-  invDraft: {}, // product_id -> {counted_qty, note}
+  editingKey: null,
+  invDraft: {},    // product_key -> {counted_qty, note}
   monthlySummary: null,
 };
 
 const $ = (id) => document.getElementById(id);
 
-function toast(msg, type = "info") {
+function toast(msg, type="info"){
   const el = $("toast");
   el.textContent = msg;
   el.style.borderColor = type === "error" ? "rgba(211,91,91,.35)" : "var(--line)";
   el.classList.add("show");
-  setTimeout(() => el.classList.remove("show"), 2600);
+  setTimeout(()=> el.classList.remove("show"), 2600);
 }
 
-function setEnvPill() {
+function setEnvPill(){
   const pill = $("envPill");
-  if (!GAS_WEBAPP_URL || GAS_WEBAPP_URL.includes("PASTE_")) {
+  if (!GAS_WEBAPP_URL || GAS_WEBAPP_URL.includes("PASTE_")){
     pill.textContent = "⚠️ Chưa cấu hình GAS_WEBAPP_URL";
     pill.style.borderColor = "rgba(211,91,91,.35)";
   } else {
@@ -35,62 +35,65 @@ function setEnvPill() {
   }
 }
 
-async function api(action, payload = {}) {
-  if (!GAS_WEBAPP_URL || GAS_WEBAPP_URL.includes("PASTE_")) {
+async function api(action, payload={}){
+  if (!GAS_WEBAPP_URL || GAS_WEBAPP_URL.includes("PASTE_")){
     toast("Bạn chưa dán GAS_WEBAPP_URL trong app.js", "error");
     throw new Error("Missing GAS_WEBAPP_URL");
   }
   const res = await fetch(GAS_WEBAPP_URL, {
     method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" }, // GAS dễ parse hơn
-    body: JSON.stringify({ action, ...payload }),
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action, ...payload })
   });
   const data = await res.json();
   if (!data.ok) throw new Error(data.message || "API error");
   return data;
 }
 
-function formatMoney(n) {
+function formatMoney(n){
   const x = Number(n || 0);
   return x.toLocaleString("vi-VN");
 }
-
-function safeImg(url) {
+function safeImg(url){
   return url && String(url).trim() ? String(url).trim() : "";
 }
-
-function todayYMD() {
+function todayYMD(){
   const d = new Date();
   const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth()+1).padStart(2,"0");
+  const dd = String(d.getDate()).padStart(2,"0");
   return `${yyyy}-${mm}-${dd}`;
+}
+function isFilter(prefix){
+  const p = String(prefix || "").trim().toLowerCase();
+  return p.startsWith("lọc") || p.startsWith("loc");
+}
+function keyLabel(p){
+  // hiển thị “mã chính” theo rule
+  if (isFilter(p.prefix)) return `OEM: ${p.oem || "—"}`;
+  return `SKU: ${p.sku || "—"}`;
 }
 
 /* =========================
    TABS
 ========================= */
-function showTab(tabName) {
-  document.querySelectorAll(".tab").forEach((t) => {
-    t.classList.toggle("active", t.dataset.tab === tabName);
-  });
-  const views = ["products", "import", "export", "inventory", "admin"];
-  views.forEach((v) => {
+function showTab(tabName){
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab===tabName));
+  ["products","import","export","inventory","admin"].forEach(v=>{
     const el = $(`view-${v}`);
-    if (el) el.style.display = (v === tabName) ? "" : "none";
+    if (el) el.style.display = (v===tabName) ? "" : "none";
   });
 
-  if (tabName === "products") renderProductsTable();
-  if (tabName === "import") renderImportUI();
-  if (tabName === "export") renderExportUI();
-  if (tabName === "inventory") renderInventoryUI();
-  if (tabName === "admin") renderAdminUI();
+  if (tabName==="products") renderProductsCards();
+  if (tabName==="import") renderImportUI();
+  if (tabName==="export") renderExportUI();
+  if (tabName==="inventory") renderInventoryUI();
 }
 
 /* =========================
    LOADERS
 ========================= */
-async function loadMetaAndProducts() {
+async function loadMetaAndProducts(){
   const [metaRes, prodRes] = await Promise.all([
     api("getMeta"),
     api("getProducts"),
@@ -99,67 +102,100 @@ async function loadMetaAndProducts() {
   state.products = prodRes.products;
 }
 
-async function reloadAll() {
-  try {
+async function reloadAll(){
+  try{
     toast("Đang tải dữ liệu...");
     await loadMetaAndProducts();
-    renderProductsTable();
-    fillMetaSelects();
+    window.ProductUI?.refreshMeta?.(state.meta);
     fillProductSelects();
+    renderProductsCards();
     renderImportUI();
     renderExportUI();
     renderInventoryUI();
-    renderAdminUI();
     toast("Đã tải xong ✅");
-  } catch (e) {
+  }catch(e){
     toast(e.message, "error");
   }
 }
 
 /* =========================
-   PRODUCTS LIST
+   PRODUCTS — CARD RENDER
 ========================= */
-function renderProductsTable() {
+function renderProductsCards(){
   const q = ($("qProducts").value || "").toLowerCase().trim();
-  const tbody = $("productsTbody");
-  tbody.innerHTML = "";
+  const grid = $("productsGrid");
+  if (!grid) return;
 
-  const rows = state.products
-    .filter(p => {
-      if (!q) return true;
-      const hay = `${p.product_id} ${p.product_name} ${p.brand} ${p.prefix}`.toLowerCase();
-      return hay.includes(q);
-    })
-    .map(p => {
-      const img = safeImg(p.image_url);
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>
-          <img class="thumb" src="${img}" alt="img"
-               onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=No';" />
-        </td>
-        <td><b>${p.product_id}</b></td>
-        <td>${p.product_name}</td>
-        <td>${p.brand || ""}</td>
-        <td>${p.unit || ""}</td>
-        <td><b>${Number(p.qty || 0)}</b></td>
-        <td>${formatMoney(p.price || 0)}</td>
-        <td class="row" style="gap:8px;">
-          <button class="btn secondary" data-act="detail" data-id="${p.product_id}">Details</button>
-          <button class="btn" data-act="edit" data-id="${p.product_id}">Sửa</button>
-        </td>
-      `;
-      return tr;
-    });
+  grid.innerHTML = "";
+  const list = state.products.filter(p=>{
+    if (!q) return true;
+    const hay = `${p.product_name} ${p.brand} ${p.prefix} ${p.sku} ${p.oem} ${p.oem_replace}`.toLowerCase();
+    return hay.includes(q);
+  });
 
-  rows.forEach(tr => tbody.appendChild(tr));
+  list.forEach(p=>{
+    const card = document.createElement("div");
+    card.className = "pcard";
 
-  tbody.querySelectorAll("button[data-act]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.id;
+    const img = safeImg(p.image_url);
+    const line1 = `${p.prefix || ""} • ${p.brand || ""} • ${p.unit || ""}`.replace(/^\s*•\s*|\s*•\s*$/g,"");
+    const line2 = isFilter(p.prefix)
+      ? `OEM: ${p.oem || "—"} | Thay thế: ${p.oem_replace || "—"}`
+      : `SKU: ${p.sku || "—"} | Thay thế: ${p.oem_replace || "—"}`;
+
+    card.innerHTML = `
+      <img class="pimg" src="${img}" loading="lazy" alt="img"
+           onerror="this.onerror=null;this.src='https://via.placeholder.com/160x110?text=No+Image';"/>
+
+      <div class="pinfo">
+        <p class="pname">${p.product_name}</p>
+        <div class="psub">${line1 || "—"}</div>
+        <div class="psub">${line2}</div>
+        <div class="pmeta">
+          <span>Tồn: <b>${Number(p.qty||0)}</b></span>
+          <span>Giá: <b>${formatMoney(p.price||0)}</b></span>
+        </div>
+      </div>
+
+      <div class="pactions">
+        <button class="btn secondary" data-act="detail" data-key="${p.product_key}">Chi tiết</button>
+        <button class="btn" data-act="edit" data-key="${p.product_key}">Sửa</button>
+        <label class="chkdel">
+          <input type="checkbox" data-del="${p.product_key}" />
+          Xóa
+        </label>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  grid.querySelectorAll("button[data-act]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const key = btn.dataset.key;
       const act = btn.dataset.act;
-      if (act === "edit") window.ProductUI.openEdit(id);
-      if (act === "detail") window.ProductUI.openDetails(id);
+      if (act==="edit") window.ProductUI.openEdit(key);
+      if (act==="detail") window.ProductUI.openDetails(key);
+    });
+  });
+}
+
+/* =========================
+   SELECTS (import/export/admin price)
+========================= */
+function fillProductSelects(){
+  const selects = [
+    $("importProductSelect"),
+    $("exportProductSelect"),
+    $("priceProductSelect"),
+  ];
+  selects.forEach(sel=>{
+    if (!sel) return;
+    sel.innerHTML = "";
+    state.products.forEach(p=>{
+      const opt = document.createElement("option");
+      opt.value = p.product_key;
+      opt.textContent = `${p.product_name} — ${keyLabel(p)}`;
+      sel.appendChild(opt);
     });
   });
 }
@@ -167,255 +203,211 @@ function renderProductsTable() {
 /* =========================
    IMPORT/EXPORT
 ========================= */
-function fillProductSelects() {
-  const selects = [
-    $("importProductSelect"),
-    $("exportProductSelect"),
-    $("priceProductSelect"),
-  ];
-  selects.forEach(sel => {
-    if (!sel) return;
-    sel.innerHTML = "";
-    state.products.forEach(p => {
-      const opt = document.createElement("option");
-      opt.value = p.product_id;
-      opt.textContent = `${p.product_id} — ${p.product_name}`;
-      sel.appendChild(opt);
-    });
-  });
-}
-
-function renderImportUI() {
-  const sel = $("importProductSelect");
-  const id = sel?.value;
-  const p = state.products.find(x => x.product_id === id);
+function renderImportUI(){
+  const key = $("importProductSelect")?.value;
+  const p = state.products.find(x=> x.product_key===key);
   $("importPreview").innerHTML = p
     ? `<div class="row">
-         <img class="thumb" src="${safeImg(p.image_url)}"
-              onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=No';" />
+         <img class="pimg" src="${safeImg(p.image_url)}"
+              onerror="this.onerror=null;this.src='https://via.placeholder.com/160x110?text=No+Image';"/>
          <div>
-           <div><b>${p.product_id}</b> — ${p.product_name}</div>
-           <div class="muted">Tồn hiện tại: <b>${p.qty}</b> • Giá: ${formatMoney(p.price)}</div>
+           <div><b>${p.product_name}</b></div>
+           <div class="muted">${keyLabel(p)} • Tồn: <b>${p.qty}</b> • Giá: ${formatMoney(p.price)}</div>
          </div>
        </div>`
     : "Chưa chọn sản phẩm.";
 }
-
-function renderExportUI() {
-  const sel = $("exportProductSelect");
-  const id = sel?.value;
-  const p = state.products.find(x => x.product_id === id);
+function renderExportUI(){
+  const key = $("exportProductSelect")?.value;
+  const p = state.products.find(x=> x.product_key===key);
   $("exportPreview").innerHTML = p
     ? `<div class="row">
-         <img class="thumb" src="${safeImg(p.image_url)}"
-              onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=No';" />
+         <img class="pimg" src="${safeImg(p.image_url)}"
+              onerror="this.onerror=null;this.src='https://via.placeholder.com/160x110?text=No+Image';"/>
          <div>
-           <div><b>${p.product_id}</b> — ${p.product_name}</div>
-           <div class="muted">Tồn hiện tại: <b>${p.qty}</b> • Giá: ${formatMoney(p.price)}</div>
+           <div><b>${p.product_name}</b></div>
+           <div class="muted">${keyLabel(p)} • Tồn: <b>${p.qty}</b> • Giá: ${formatMoney(p.price)}</div>
          </div>
        </div>`
     : "Chưa chọn sản phẩm.";
 }
 
-async function doImport() {
-  const product_id = $("importProductSelect").value;
+async function doImport(){
+  const product_key = $("importProductSelect").value;
   const qty = Number($("importQty").value || 0);
   const note = $("importNote").value || "";
-  if (!product_id) return toast("Chọn sản phẩm", "error");
+  if (!product_key) return toast("Chọn sản phẩm", "error");
   if (qty <= 0) return toast("Số lượng phải > 0", "error");
 
-  try {
-    const res = await api("applyTransaction", {
-      type: "IMPORT",
-      product_id,
-      qty,
-      note
-    });
-    toast(`Đã nhập: ${res.new_qty}`, "info");
+  try{
+    const res = await api("applyTransaction", { type:"IMPORT", product_key, qty, note });
+    toast(`Đã nhập. Tồn mới: ${res.new_qty}`);
+    $("importQty").value=""; $("importNote").value="";
     await reloadAll();
-    $("importQty").value = "";
-    $("importNote").value = "";
-  } catch (e) {
-    toast(e.message, "error");
-  }
+  }catch(e){ toast(e.message, "error"); }
 }
-
-async function doExport() {
-  const product_id = $("exportProductSelect").value;
+async function doExport(){
+  const product_key = $("exportProductSelect").value;
   const qty = Number($("exportQty").value || 0);
   const note = $("exportNote").value || "";
-  if (!product_id) return toast("Chọn sản phẩm", "error");
+  if (!product_key) return toast("Chọn sản phẩm", "error");
   if (qty <= 0) return toast("Số lượng phải > 0", "error");
 
-  try {
-    const res = await api("applyTransaction", {
-      type: "EXPORT",
-      product_id,
-      qty,
-      note
-    });
-    toast(`Đã xuất: ${res.new_qty}`, "info");
+  try{
+    const res = await api("applyTransaction", { type:"EXPORT", product_key, qty, note });
+    toast(`Đã xuất. Tồn mới: ${res.new_qty}`);
+    $("exportQty").value=""; $("exportNote").value="";
     await reloadAll();
-    $("exportQty").value = "";
-    $("exportNote").value = "";
-  } catch (e) {
-    toast(e.message, "error");
-  }
+  }catch(e){ toast(e.message, "error"); }
 }
 
 /* =========================
    INVENTORY CHECK
 ========================= */
-function renderInventoryUI() {
+function renderInventoryUI(){
   if (!$("invDate").value) $("invDate").value = todayYMD();
-  if (!$("invMonth").value) {
+  if (!$("invMonth").value){
     const d = new Date();
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    $("invMonth").value = `${yyyy}-${mm}`;
+    $("invMonth").value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
   }
 
-  const q = ($("qInv").value || "").toLowerCase().trim();
+  const q = ($("qInv").value||"").toLowerCase().trim();
   const tbody = $("invTbody");
   tbody.innerHTML = "";
 
-  const list = state.products.filter(p => {
+  const list = state.products.filter(p=>{
     if (!q) return true;
-    const hay = `${p.product_id} ${p.product_name} ${p.brand} ${p.prefix}`.toLowerCase();
+    const hay = `${p.product_name} ${p.brand} ${p.prefix} ${p.sku} ${p.oem} ${p.oem_replace}`.toLowerCase();
     return hay.includes(q);
   });
 
-  list.forEach(p => {
-    const draft = state.invDraft[p.product_id] || {};
-    const counted = (draft.counted_qty !== undefined && draft.counted_qty !== null)
-      ? draft.counted_qty
-      : "";
+  list.forEach(p=>{
+    const draft = state.invDraft[p.product_key] || {};
+    const counted = (draft.counted_qty !== undefined && draft.counted_qty !== null) ? draft.counted_qty : "";
     const note = draft.note || "";
-    const systemQty = Number(p.qty || 0);
-    const diff = (counted === "" ? null : Number(counted) - systemQty);
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>
-        <img class="thumb" src="${safeImg(p.image_url)}"
-             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=No';"/>
+      <td style="padding:10px; border-bottom:1px solid var(--line);">
+        <img class="pimg" src="${safeImg(p.image_url)}"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/160x110?text=No+Image';"/>
       </td>
-      <td><b>${p.product_id}</b></td>
-      <td>${p.product_name}</td>
-      <td><b>${systemQty}</b></td>
-      <td>
-        <input data-inv="counted" data-id="${p.product_id}"
-               type="number" step="1" min="0" style="width:140px"
-               value="${counted}" placeholder="..." />
+      <td style="padding:10px; border-bottom:1px solid var(--line);"><b>${keyLabel(p)}</b></td>
+      <td style="padding:10px; border-bottom:1px solid var(--line);">${p.product_name}</td>
+      <td style="padding:10px; border-bottom:1px solid var(--line);"><b>${Number(p.qty||0)}</b></td>
+      <td style="padding:10px; border-bottom:1px solid var(--line);">
+        <input data-inv="counted" data-key="${p.product_key}" type="number" min="0" step="1"
+               style="width:140px" value="${counted}" placeholder="..." />
       </td>
-      <td>
-        ${diff === null ? `<span class="muted">—</span>` :
-          `<span class="diff ${diff >= 0 ? "plus" : "minus"}">${diff >= 0 ? "+" : ""}${diff}</span>`}
-      </td>
-      <td>
-        <input data-inv="note" data-id="${p.product_id}"
-               value="${note}" placeholder="ghi chú..." style="width:260px" />
+      <td style="padding:10px; border-bottom:1px solid var(--line);">
+        <input data-inv="note" data-key="${p.product_key}" value="${note}" placeholder="ghi chú..." style="width:260px" />
       </td>
     `;
     tbody.appendChild(tr);
   });
 
-  tbody.querySelectorAll("input[data-inv]").forEach(inp => {
-    inp.addEventListener("input", () => {
-      const id = inp.dataset.id;
+  tbody.querySelectorAll("input[data-inv]").forEach(inp=>{
+    inp.addEventListener("input", ()=>{
+      const key = inp.dataset.key;
       const kind = inp.dataset.inv;
-      state.invDraft[id] = state.invDraft[id] || {};
-      if (kind === "counted") {
-        const v = inp.value;
-        state.invDraft[id].counted_qty = (v === "" ? "" : Number(v));
+      state.invDraft[key] = state.invDraft[key] || {};
+      if (kind==="counted"){
+        state.invDraft[key].counted_qty = inp.value==="" ? "" : Number(inp.value);
       } else {
-        state.invDraft[id].note = inp.value;
+        state.invDraft[key].note = inp.value;
       }
-      // re-render row diff quickly by re-render table (simple)
-      renderInventoryUI();
     });
   });
 }
 
-async function saveInventoryCheck() {
+async function saveInventoryCheck(){
   const date = $("invDate").value;
   if (!date) return toast("Chọn ngày kiểm kê", "error");
 
   const items = [];
-  for (const [product_id, d] of Object.entries(state.invDraft)) {
+  for (const [product_key, d] of Object.entries(state.invDraft)){
     if (d.counted_qty === "" || d.counted_qty === undefined) continue;
-    items.push({
-      product_id,
-      counted_qty: Number(d.counted_qty || 0),
-      note: d.note || ""
-    });
+    items.push({ product_key, counted_qty:Number(d.counted_qty||0), note:d.note||"" });
   }
-  if (!items.length) return toast("Chưa nhập số thực tế cho sản phẩm nào", "error");
+  if (!items.length) return toast("Chưa nhập số thực tế", "error");
 
-  try {
+  try{
     const res = await api("saveInventoryCheck", { date, items });
     toast(`Đã lưu kiểm kê: ${res.saved} dòng ✅`);
     state.invDraft = {};
     await reloadAll();
-  } catch (e) {
-    toast(e.message, "error");
-  }
+  }catch(e){ toast(e.message, "error"); }
 }
 
-async function buildMonthlySummary() {
-  const month = $("invMonth").value; // YYYY-MM
+async function buildMonthlySummary(){
+  const month = $("invMonth").value;
   if (!month) return toast("Chọn tháng", "error");
-  try {
+  try{
     const res = await api("buildMonthlySummary", { month });
-    state.monthlySummary = res;
     $("monthlyResult").innerHTML = `
       <div class="row between">
         <div>
           <div><b>Đã tổng hợp tháng:</b> ${month}</div>
-          <div class="muted">Sheet: <b>KIEM_KE_THANG</b> • Số dòng: <b>${res.rows}</b></div>
+          <div class="muted">Sheet: <b>KIEM_KE_THANG</b> • Dòng: <b>${res.rows}</b></div>
         </div>
         <span class="tag">OK</span>
       </div>
     `;
     toast("Tổng hợp tháng xong ✅");
-  } catch (e) {
-    toast(e.message, "error");
-  }
+  }catch(e){ toast(e.message,"error"); }
 }
 
-async function createMonthlyDoc() {
+async function createMonthlyDoc(){
   const month = $("invMonth").value;
   if (!month) return toast("Chọn tháng", "error");
-  try {
+  try{
     const res = await api("createMonthlyDocReport", { month });
     $("monthlyResult").innerHTML = `
       <div class="row between">
         <div>
-          <div><b>Đã tạo báo cáo Google Doc:</b> ${month}</div>
+          <div><b>Đã tạo Google Doc:</b> ${month}</div>
           <div class="muted">Mở: <a href="${res.docUrl}" target="_blank" rel="noreferrer">${res.docUrl}</a></div>
         </div>
         <span class="tag">DOC</span>
       </div>
     `;
     toast("Tạo Google Doc xong ✅");
-  } catch (e) {
-    toast(e.message, "error");
-  }
+  }catch(e){ toast(e.message,"error"); }
 }
 
 /* =========================
-   INIT + EVENTS
+   DELETE SELECTED
 ========================= */
-function wireTabs() {
-  document.querySelectorAll(".tab").forEach(t => {
-    t.addEventListener("click", () => showTab(t.dataset.tab));
+async function deleteSelected(){
+  const checks = document.querySelectorAll("input[data-del]:checked");
+  if (!checks.length) return toast("Chưa chọn sản phẩm để xóa", "error");
+  const keys = Array.from(checks).map(x=> x.dataset.del);
+
+  if (!confirm(`Xóa ${keys.length} sản phẩm?`)) return;
+
+  try{
+    for (const product_key of keys){
+      await api("deleteProduct", { product_key });
+    }
+    toast("Đã xóa ✅");
+    await reloadAll();
+  }catch(e){ toast(e.message, "error"); }
+}
+
+/* =========================
+   INIT
+========================= */
+function wireTabs(){
+  document.querySelectorAll(".tab").forEach(t=>{
+    t.addEventListener("click", ()=> showTab(t.dataset.tab));
   });
 }
 
-function wireEvents() {
+function wireEvents(){
   $("btnReloadProducts").addEventListener("click", reloadAll);
-  $("qProducts").addEventListener("input", renderProductsTable);
-  $("btnOpenProductModal").addEventListener("click", () => window.ProductUI.openCreate());
+  $("qProducts").addEventListener("input", renderProductsCards);
+  $("btnOpenProductModal").addEventListener("click", ()=> window.ProductUI.openCreate());
+  $("btnDeleteSelected").addEventListener("click", deleteSelected);
 
   $("btnReloadImport").addEventListener("click", reloadAll);
   $("importProductSelect").addEventListener("change", renderImportUI);
@@ -434,32 +426,16 @@ function wireEvents() {
   $("btnReloadAdmin").addEventListener("click", reloadAll);
 }
 
-function fillMetaSelects() {
-  // product modal selects handled in product.js via ProductUI.refreshMeta
-  window.ProductUI?.refreshMeta?.(state.meta);
-
-  // admin price select already filled by fillProductSelects
-}
-
-function renderAdminUI() {
-  window.AdminUI?.refresh?.(state);
-}
-
-window.addEventListener("DOMContentLoaded", async () => {
+window.addEventListener("DOMContentLoaded", async ()=>{
+  $("yearNow").textContent = String(new Date().getFullYear());
   setEnvPill();
   wireTabs();
   wireEvents();
-  try {
-    await reloadAll();
-  } catch (e) {
-    toast(e.message, "error");
-  }
+  await reloadAll();
 });
 
-/* Expose state for other modules */
+/* Expose */
 window.AppState = state;
 window.AppApi = api;
 window.AppToast = toast;
 window.AppReloadAll = reloadAll;
-window.AppFillProductSelects = fillProductSelects;
-window.AppFillMetaSelects = fillMetaSelects;
