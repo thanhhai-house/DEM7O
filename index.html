@@ -1,55 +1,448 @@
 <!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Kho phụ tùng</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quản lý kho phụ tùng</title>
+
   <style>
-    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    body{margin:0;background:#f6f7fb}
-    header{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:14px 16px;background:#111827;color:#fff;position:sticky;top:0}
-    header .left{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .muted{color:#cbd5e1}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .tab{border:1px solid #374151;background:#111827;color:#fff;padding:8px 10px;border-radius:10px;cursor:pointer;opacity:.85}
-    .tab.active{background:#fff;color:#111827;border-color:#fff;opacity:1}
-    main{padding:14px 16px;max-width:1200px;margin:0 auto}
-    .toast{position:fixed;right:16px;bottom:16px;background:#111827;color:#fff;padding:10px 12px;border-radius:12px;display:none;max-width:520px;z-index:100}
-    .topbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    input,button{padding:8px 10px;border-radius:10px;border:1px solid #374151}
-    button{cursor:pointer}
-    button.primary{background:#fff;color:#111827;border-color:#fff}
-    .linkbtn{background:transparent;color:#fff;border-color:#374151}
+    :root{
+      --bg: #fbf7ee;          /* trắng ngà */
+      --card:#ffffff;
+      --line:#e7efe8;
+      --primary:#7fbf9b;      /* xanh pastel */
+      --primary-2:#bfe3cf;    /* xanh nhạt */
+      --text:#1f2a24;
+      --muted:#607166;
+      --danger:#d35b5b;
+      --warn:#d1a24a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      background:linear-gradient(90deg, var(--primary-2), #fff);
+      border-bottom:1px solid var(--line);
+      padding:12px 16px;
+    }
+    .wrap{max-width:1200px; margin:0 auto; padding:14px 16px;}
+    .brand{
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .brand h1{margin:0; font-size:18px;}
+    .pill{
+      font-size:12px; padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      color:var(--muted);
+    }
+
+    .tabs{
+      display:flex; gap:8px; flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .tab{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:14px;
+      padding:10px 12px;
+      cursor:pointer;
+      user-select:none;
+      font-weight:600;
+      color:var(--muted);
+    }
+    .tab.active{
+      background:var(--primary);
+      color:#fff;
+      border-color:transparent;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+      margin-top:14px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,.04);
+      padding:12px;
+    }
+
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .row.between{justify-content:space-between}
+    .muted{color:var(--muted)}
+    .title{margin:0 0 6px 0; font-size:16px;}
+    .btn{
+      background:var(--primary);
+      color:#fff;
+      border:0;
+      border-radius:12px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .btn.secondary{background:#fff; color:var(--text); border:1px solid var(--line);}
+    .btn.danger{background:var(--danger);}
+    .btn:disabled{opacity:.6; cursor:not-allowed}
+
+    input, select, textarea{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      background:#fff;
+      outline:none;
+      min-height:40px;
+      font:inherit;
+    }
+    input:focus, select:focus, textarea:focus{
+      box-shadow: 0 0 0 4px rgba(127,191,155,.25);
+    }
+    textarea{min-height:90px; width:100%}
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+    }
+    th, td{
+      padding:10px;
+      border-bottom:1px solid var(--line);
+      text-align:left;
+      vertical-align:middle;
+      font-size:14px;
+    }
+    th{background:#f7fbf8; color:var(--muted); font-weight:800;}
+    tr:last-child td{border-bottom:0}
+
+    .thumb{
+      width:48px; height:48px;
+      border-radius:12px;
+      object-fit:cover;
+      border:1px solid var(--line);
+      background:#f5f5f5;
+    }
+
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.25);
+      display:none; align-items:center; justify-content:center;
+      padding:16px; z-index:1000;
+    }
+    .modal-backdrop.show{display:flex}
+    .modal{
+      width:min(780px, 100%);
+      background:#fff;
+      border-radius:18px;
+      border:1px solid var(--line);
+      box-shadow: 0 20px 60px rgba(0,0,0,.18);
+      padding:12px;
+    }
+    .modal h2{margin:6px 0 10px 0; font-size:16px;}
+    .cols{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    @media (max-width: 860px){ .cols{grid-template-columns:1fr;} }
+
+    .toast{
+      position:fixed; right:14px; bottom:14px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 12px;
+      box-shadow:0 10px 30px rgba(0,0,0,.12);
+      max-width:min(420px, calc(100% - 28px));
+      display:none;
+      z-index:2000;
+    }
+    .toast.show{display:block}
+    .tag{
+      display:inline-block;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      color:var(--muted);
+      font-size:12px;
+      background:#fff;
+    }
+    .diff.plus{color:#0f7a3a; font-weight:800;}
+    .diff.minus{color:#b53a3a; font-weight:800;}
   </style>
 </head>
+
 <body>
 <header>
-  <div class="left">
-    <strong>Kho phụ tùng</strong>
-    <span class="muted" id="status">Chưa cấu hình GAS</span>
-    <div class="topbar">
-      <input id="gasUrl" placeholder="https://script.google.com/macros/s/AKfycbws48973An00n8h6LBFyy11B7kYWkcSbJgyhzVjx-yXiazB3MpcgqK2fSw0yZVtUZzT/exec" style="width:min(560px,72vw)"/>
-      <button class="primary" id="saveGas">Lưu</button>
-      <button class="linkbtn" id="clearGas">Xoá</button>
+  <div class="wrap">
+    <div class="brand">
+      <h1>Kho phụ tùng — Pastel</h1>
+      <span id="envPill" class="pill">Chưa cấu hình GAS_WEBAPP_URL</span>
     </div>
-  </div>
-
-  <div class="tabs">
-    <button class="tab active" data-tab="products">All sản phẩm</button>
-    <button class="tab" data-tab="import">Nhập</button>
-    <button class="tab" data-tab="export">Xuất</button>
-    <button class="tab" data-tab="admin">Admin</button>
+    <div class="tabs">
+      <div class="tab active" data-tab="products">All products</div>
+      <div class="tab" data-tab="import">Import</div>
+      <div class="tab" data-tab="export">Export</div>
+      <div class="tab" data-tab="inventory">Kiểm kê</div>
+      <div class="tab" data-tab="admin">Admin</div>
+    </div>
   </div>
 </header>
 
-<main>
-  <div id="view-products"></div>
-  <div id="view-import" style="display:none"></div>
-  <div id="view-export" style="display:none"></div>
-  <div id="view-admin" style="display:none"></div>
+<main class="wrap">
+  <div class="grid">
+
+    <!-- PRODUCTS -->
+    <section id="view-products" class="card">
+      <div class="row between">
+        <div>
+          <h2 class="title">Danh sách sản phẩm</h2>
+          <div class="muted">Tìm kiếm theo tên / mã / brand</div>
+        </div>
+        <div class="row">
+          <input id="qProducts" placeholder="Tìm nhanh..." />
+          <button class="btn secondary" id="btnReloadProducts">Tải lại</button>
+          <button class="btn" id="btnOpenProductModal">+ Thêm sản phẩm</button>
+        </div>
+      </div>
+      <div style="margin-top:10px; overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Ảnh</th>
+              <th>Mã</th>
+              <th>Tên</th>
+              <th>Brand</th>
+              <th>Đơn vị</th>
+              <th>Tồn</th>
+              <th>Giá</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="productsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- IMPORT -->
+    <section id="view-import" class="card" style="display:none;">
+      <div class="row between">
+        <div>
+          <h2 class="title">Import (nhập kho)</h2>
+          <div class="muted">Chọn sản phẩm và số lượng nhập</div>
+        </div>
+        <button class="btn secondary" id="btnReloadImport">Tải lại sản phẩm</button>
+      </div>
+
+      <div class="cols" style="margin-top:10px;">
+        <div>
+          <div class="row" style="margin-bottom:10px;">
+            <select id="importProductSelect" style="flex:1"></select>
+            <input id="importQty" type="number" min="0" step="1" placeholder="Số lượng" style="width:160px" />
+          </div>
+          <textarea id="importNote" placeholder="Ghi chú..."></textarea>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn" id="btnDoImport">Lưu nhập</button>
+            <span class="tag">Ghi log vào sheet TRANSACTIONS</span>
+          </div>
+        </div>
+        <div>
+          <div class="muted" style="margin-bottom:8px;">Gợi ý: nhập theo lô, ghi chú vị trí kệ / số phiếu</div>
+          <div id="importPreview" class="card" style="padding:12px; border-radius:14px; border:1px dashed var(--line); box-shadow:none;">
+            Chưa chọn sản phẩm.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPORT -->
+    <section id="view-export" class="card" style="display:none;">
+      <div class="row between">
+        <div>
+          <h2 class="title">Export (xuất kho)</h2>
+          <div class="muted">Chọn sản phẩm và số lượng xuất</div>
+        </div>
+        <button class="btn secondary" id="btnReloadExport">Tải lại sản phẩm</button>
+      </div>
+
+      <div class="cols" style="margin-top:10px;">
+        <div>
+          <div class="row" style="margin-bottom:10px;">
+            <select id="exportProductSelect" style="flex:1"></select>
+            <input id="exportQty" type="number" min="0" step="1" placeholder="Số lượng" style="width:160px" />
+          </div>
+          <textarea id="exportNote" placeholder="Ghi chú... (xe, khách, đơn hàng...)"></textarea>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn" id="btnDoExport">Lưu xuất</button>
+            <span class="tag">Tự trừ tồn PRODUCTS</span>
+          </div>
+        </div>
+        <div>
+          <div class="muted" style="margin-bottom:8px;">Nếu xuất vượt tồn, hệ thống sẽ chặn</div>
+          <div id="exportPreview" class="card" style="padding:12px; border-radius:14px; border:1px dashed var(--line); box-shadow:none;">
+            Chưa chọn sản phẩm.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INVENTORY CHECK -->
+    <section id="view-inventory" class="card" style="display:none;">
+      <div class="row between">
+        <div>
+          <h2 class="title">Kiểm kê theo ngày</h2>
+          <div class="muted">Nhập “số thực tế” để ghi nhận chênh lệch</div>
+        </div>
+        <div class="row">
+          <input id="invDate" type="date" />
+          <button class="btn secondary" id="btnReloadInv">Tải lại</button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <input id="qInv" placeholder="Tìm sản phẩm để kiểm kê..." style="flex:1" />
+        <button class="btn" id="btnSaveInv">Lưu kiểm kê ngày</button>
+      </div>
+
+      <div style="margin-top:10px; overflow:auto;">
+        <table>
+          <thead>
+          <tr>
+            <th>Ảnh</th>
+            <th>Mã</th>
+            <th>Tên</th>
+            <th>Tồn hệ thống</th>
+            <th>Số thực tế</th>
+            <th>Chênh lệch</th>
+            <th>Ghi chú</th>
+          </tr>
+          </thead>
+          <tbody id="invTbody"></tbody>
+        </table>
+      </div>
+
+      <hr style="border:0; border-top:1px solid var(--line); margin:14px 0;" />
+
+      <div class="row between">
+        <div>
+          <h3 class="title" style="margin:0;">Tổng hợp tháng + Báo cáo Doc</h3>
+          <div class="muted">Bấm để tổng hợp dữ liệu theo tháng và tạo Google Doc report</div>
+        </div>
+        <div class="row">
+          <input id="invMonth" type="month" />
+          <button class="btn secondary" id="btnBuildMonthly">Tổng hợp tháng</button>
+          <button class="btn" id="btnCreateDoc">Tạo Google Doc</button>
+        </div>
+      </div>
+
+      <div id="monthlyResult" class="card" style="margin-top:10px; padding:12px; border-radius:14px; border:1px dashed var(--line); box-shadow:none;">
+        Chưa tạo tổng hợp tháng.
+      </div>
+    </section>
+
+    <!-- ADMIN -->
+    <section id="view-admin" class="card" style="display:none;">
+      <div class="row between">
+        <div>
+          <h2 class="title">Admin</h2>
+          <div class="muted">Quản lý prefix / brand / unit / giá</div>
+        </div>
+        <div class="row">
+          <button class="btn secondary" id="btnReloadAdmin">Tải lại</button>
+        </div>
+      </div>
+
+      <div class="cols" style="margin-top:10px;">
+        <div class="card" style="box-shadow:none;">
+          <h3 class="title">Danh mục</h3>
+          <div class="row">
+            <input id="newPrefix" placeholder="Prefix (VD: LỌC, BUGI...)" style="flex:1"/>
+            <button class="btn" id="btnAddPrefix">Thêm</button>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <input id="newBrand" placeholder="Brand" style="flex:1"/>
+            <button class="btn" id="btnAddBrand">Thêm</button>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <input id="newUnit" placeholder="Đơn vị (cái, bộ...)" style="flex:1"/>
+            <button class="btn" id="btnAddUnit">Thêm</button>
+          </div>
+          <div class="muted" style="margin-top:10px;">Danh mục lưu vào sheet META.</div>
+        </div>
+
+        <div class="card" style="box-shadow:none;">
+          <h3 class="title">Cập nhật giá nhanh</h3>
+          <div class="row">
+            <select id="priceProductSelect" style="flex:1"></select>
+            <input id="newPrice" type="number" min="0" step="100" placeholder="Giá mới" style="width:200px"/>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn" id="btnUpdatePrice">Lưu giá</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
 </main>
 
-<div class="toast" id="toast"></div>
-<script type="module" src="./app.js"></script>
+<!-- PRODUCT MODAL -->
+<div id="productModalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="row between">
+      <h2 id="productModalTitle">Thêm/Sửa sản phẩm</h2>
+      <button class="btn secondary" id="btnCloseProductModal">Đóng</button>
+    </div>
+
+    <div class="cols">
+      <div>
+        <div class="row">
+          <input id="p_id" placeholder="Mã sản phẩm (VD: P001)" style="flex:1" />
+          <input id="p_name" placeholder="Tên sản phẩm" style="flex:2" />
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <select id="p_prefix" style="flex:1"></select>
+          <select id="p_brand" style="flex:1"></select>
+          <select id="p_unit" style="flex:1"></select>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <input id="p_qty" type="number" min="0" step="1" placeholder="Tồn ban đầu" style="width:160px" />
+          <input id="p_price" type="number" min="0" step="100" placeholder="Giá" style="width:200px" />
+        </div>
+        <textarea id="p_note" placeholder="Ghi chú..."></textarea>
+
+        <div class="row" style="margin-top:10px;">
+          <input id="p_image" type="file" accept="image/*" />
+          <span class="muted">Upload ảnh → lưu Drive folder</span>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" id="btnSaveProduct">Lưu</button>
+          <button class="btn danger" id="btnDeleteProduct">Xóa</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="muted" style="margin-bottom:8px;">Preview ảnh</div>
+        <img id="p_image_preview" class="thumb" style="width:220px; height:220px; border-radius:18px;" alt="preview" />
+        <div class="muted" style="margin-top:10px;">Link hiển thị dùng dạng <b>uc?export=view</b> để không lỗi.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="./app.js"></script>
+<script src="./product.js"></script>
+<script src="./admin.js"></script>
 </body>
 </html>
